@@ -1,0 +1,49 @@
+4 PILLARS OF OOP IN JLA TIMEPIECE
+Where each pillar is used, and which classes and methods show it.
+
+1. ENCAPSULATION (private data, reached only through methods)
+   Account.java            private username, passwordHash, role, fullName. The password is stored as a
+                           SHA-256 hash (private hash method). Other classes use setPassword() and checkPassword().
+   Watch.java              every field is private. Other classes read them through the getters.
+   Transaction.java        every field is private. The status only changes through setStatus().
+   WatchStore.java         getWatches() returns a COPY of the list, so outside code cannot change the real list.
+   OrderStore.java         getTransactions() returns a COPY of the list. runLocked() hides the file lock.
+
+2. INHERITANCE (a child class extends a parent class and reuses its code)
+   Dashboard  <-  JLADash, CashierDash, AdminDash       (window, sidebar, page switching)
+   LoginPage  <-  CashierLogin, AdminLogin              (login form, checking the password)
+   WelcomeFrame  <-  WelcomePage, CashierWelcome, AdminWelcome   (welcome window)
+   Payment  <-  CashPayment, GCashPayment, QrCodePayment
+   JPanel  <-  WatchCard, WatchGallery, BrowseWatches, PurchasePanel, OrdersPanel, ManageWatchesPanel,
+               ManageCashiersPanel, AdminTransactionsPanel, CashierTransactionsPanel
+   JDialog  <-  PurchaseSummaryDialog, WatchDetailsDialog, WatchFormDialog, WatchPickerDialog
+   The child constructors call super(...) to build the parent part first.
+
+3. ABSTRACTION (the parent says WHAT must exist, the child decides HOW)
+   Dashboard.beforeShowingPage(String pageName)    abstract
+   LoginPage.openDashboard(Account account)        abstract
+   WelcomeFrame.onButtonClick()                    abstract
+   Payment: getName(), isPaidOnline(), getReferenceFieldLabel(), getReceiptLabel(),
+            getCustomerInstruction(), getCashierHint(...)   all abstract
+   OrderStore and WatchStore also hide the file reading and saving behind simple methods
+   such as addTransaction(), updateStatus(), cancelOrder() and findByReferenceCode().
+
+4. POLYMORPHISM (the same method call behaves differently depending on the object)
+   Overriding:
+     Dashboard.beforeShowingPage()  is written differently in JLADash, CashierDash and AdminDash.
+     LoginPage.openDashboard()      is written differently in CashierLogin and AdminLogin.
+     WelcomeFrame.onButtonClick()   is written differently in WelcomePage, CashierWelcome and AdminWelcome.
+     Payment methods                are written differently in CashPayment, GCashPayment and QrCodePayment.
+     toString()                     is overridden in Payment, Transaction and Watch.
+   Where it is used without checking the type:
+     PurchaseSummaryDialog   calls payment.getCustomerInstruction() and payment.isPaidOnline().
+     OrdersPanel             calls payment.getCashierHint(...).
+     Transaction             calls payment.getReceiptLabel().
+   Overloading (same name, different parameters):
+     Watch constructors (3 versions), Transaction constructors (5 versions),
+     Theme.makeFindRow (2 versions).
+
+FUNCTIONS THAT WERE CHANGED (lambda replaced by an anonymous class)
+   Every "e -> ..." and "() -> ..." was rewritten as new ActionListener() { ... },
+   new ListSelectionListener() { ... }, new Runnable() { ... } or new BooleanSupplier() { ... }.
+   The behavior is the same. Inside them, "this" is written as ClassName.this.
